@@ -1,0 +1,2 @@
+psycopg2-binary
+lambda-proxy==3.0.0

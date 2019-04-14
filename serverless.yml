@@ -1,0 +1,72 @@
+service: pgvectortiles
+provider:
+  name: aws
+  runtime: python3.6
+  stage: dev
+  region: us-west-1
+  memorySize: 256
+  timeout: 30
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "s3:*"
+      Resource:
+        Fn::Join:
+          - ""
+          - - "arn:aws:s3:::mapproxy-lambda-demo*"
+
+plugins:
+  - serverless-apigw-binary
+  - serverless-python-requirements
+custom:
+  apigwBinary:
+    types:
+      - '*/*'
+  pythonRequirements:
+    slim: true
+
+functions:
+  pgvt:
+    handler: pgvt.handler.APP
+    vpc:
+      securityGroupIds:
+        - sg-ad76cfd0
+      subnetIds:
+        - subnet-40c82626
+        - subnet-46350f1d
+    environment:
+      PGDATABASE: ${env:PGDATABASE}
+      PGHOST: ${env:PGHOST}
+      PGPASSWORD: ${env:PGPASSWORD}
+      PGUSER: ${env:PGUSER}
+    events:
+      - http:
+          path: /{proxy+}
+          method: get
+          caching:
+            enabled: true
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: false
+      - http:
+          path: /
+          method: get
+          caching:
+            enabled: true
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: false
